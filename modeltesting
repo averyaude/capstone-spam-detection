@@ -1,6 +1,7 @@
 # This code was run in the Google CoLab environment using a Python 3 Google Compute Engine Backend
 # This code is a compilation of every cell that was executed in the GC environment 
 # https://colab.research.google.com/drive/1GeGIVWYd_DP8AI47ksXyYmxcQqcygy_E
+# Dataset: https://www.kaggle.com/datasets/subhajournal/phishingemails
 # In paper when 'runtime' is mentioned: 
 # this was calculated by the GCE after running each cell with coresponding classifier/algorithm
 
