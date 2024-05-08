@@ -4,7 +4,7 @@
 # Dataset: https://www.kaggle.com/datasets/subhajournal/phishingemails
 # Code that insinuates a visual output is shared in final paper
 # In final paper when 'runtime' is mentioned: 
-# this was calculated by the GCE after running each cell with coresponding classifier/algorithm
+# this was calculated by the GCE after running each cell with coresponding classifier/algorithm, and recorded
 
 import pandas as pd
 import numpy as np
