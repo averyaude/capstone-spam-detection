@@ -1,0 +1,412 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from google.colab import drive
+drive.mount('/content/drive')
+
+file_path = '/content/drive/My Drive/emails_dataset.csv'
+df = pd.read_csv(file_path)
+
+# data cleaning - remove any missing values
+df.dropna(inplace=True)
+
+# convert email text to lowercase - ensures consistency and efficiency
+# lowercasing reduces redundancy in the data by collapsing different cases of the same word into a single representation
+# this can help improve the efficiency
+df['email_text'] = df['email_text'].str.lower()
+
+# check distribution of email types
+sns.countplot(x='email_type', data=df, palette={'Safe Email': 'blue', 'Phishing Email': 'green'})
+plt.show()
+
+print("Safe Emails:")
+print(df[df['email_type'] == 'Safe Email']['email_text'].iloc[:9])
+
+print("\nPhishing Emails:")
+print(df[df['email_type'] == 'Phishing Email']['email_text'].iloc[:9])
+
+# quanitfy each email type
+email_counts = df['email_type'].value_counts()
+print(email_counts)
+
+# calculate percentage of each email type
+email_percentages = df['email_type'].value_counts(normalize=True) * 100
+print(email_percentages)
+
+from wordcloud import WordCloud
+
+safe_emails = df[df['email_type'] == 'Safe Email']['email_text'].str.cat(sep=' ')
+phishing_emails = df[df['email_type'] == 'Phishing Email']['email_text'].str.cat(sep=' ')
+
+# Create word clouds
+wordcloud_safe = WordCloud(width=800, height=400, background_color='white').generate(safe_emails)
+wordcloud_phishing = WordCloud(width=800, height=400, background_color='white').generate(phishing_emails)
+
+# Plot the word clouds
+plt.figure(figsize=(12, 6))
+plt.subplot(1, 2, 1)
+plt.imshow(wordcloud_safe, interpolation='bilinear')
+plt.title('Word Cloud for Safe Emails')
+plt.axis('off')
+
+plt.subplot(1, 2, 2)
+plt.imshow(wordcloud_phishing, interpolation='bilinear')
+plt.title('Word Cloud for Phishing Emails')
+plt.axis('off')
+
+plt.show()
+
+# Number 1: Multinomial Naive Bayes (MNB)
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+import psutil
+
+def monitor_resource_utilization():
+    # record initial CPU and memory usage
+    initial_cpu_usage = psutil.cpu_percent()
+    initial_memory_usage = psutil.virtual_memory().used
+
+    X = df['email_text']
+    y = df['email_type']
+
+    # Training / testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    vectorizer = CountVectorizer()
+    X_train_counts = vectorizer.fit_transform(X_train)
+    X_test_counts = vectorizer.transform(X_test)
+
+    nb_model = MultinomialNB()
+    nb_model.fit(X_train_counts, y_train)
+
+    y_pred = nb_model.predict(X_test_counts)
+    accuracy = accuracy_score(y_test, y_pred)
+    conf_matrix = confusion_matrix(y_test, y_pred)
+    classification_rep = classification_report(y_test, y_pred)
+
+    print("Multinomial Naive Bayes (MNB):")
+    print(f"Accuracy: {accuracy}")
+    print("\nConfusion Matrix:")
+    print(conf_matrix)
+    print("\nClassification Report:")
+    print(classification_rep)
+
+    # final CPU and memory usage
+    final_cpu_usage = psutil.cpu_percent()
+    final_memory_usage = psutil.virtual_memory().used
+
+    # calculate resource utilization
+    cpu_utilization = final_cpu_usage - initial_cpu_usage
+    memory_utilization = final_memory_usage - initial_memory_usage
+
+    return cpu_utilization, memory_utilization
+
+cpu_utilization, memory_utilization = monitor_resource_utilization()
+print("CPU Utilization:", cpu_utilization, "%")
+print("Memory Utilization:", memory_utilization, "bytes")
+
+# Output / Results
+/*
+Multinomial Naive Bayes (MNB):
+Accuracy: 0.9627045881405957
+
+Confusion Matrix:
+[[1481   37]
+ [ 102 2107]]
+
+Classification Report:
+                precision    recall  f1-score   support
+
+Phishing Email       0.94      0.98      0.96      1518
+    Safe Email       0.98      0.95      0.97      2209
+
+      accuracy                           0.96      3727
+     macro avg       0.96      0.96      0.96      3727
+  weighted avg       0.96      0.96      0.96      3727
+
+CPU Utilization: 31.2 %
+Memory Utilization: 11010048 bytes
+*/
+
+# Number 2: Support Vector Machine (SVM)
+from sklearn.svm import SVC
+
+def monitor_resource_utilization():
+    # record initial CPU and memory usage
+    initial_cpu_usage = psutil.cpu_percent()
+    initial_memory_usage = psutil.virtual_memory().used
+
+    X = df['email_text']
+    y = df['email_type']
+
+    # training / testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # convert text data into a numeric matrix
+    vectorizer = CountVectorizer()
+    X_train_counts = vectorizer.fit_transform(X_train)
+    X_test_counts = vectorizer.transform(X_test)
+
+    # Support Vector Machine (SVM)
+    svm_model = SVC(kernel='linear')
+    svm_model.fit(X_train_counts, y_train)
+
+    y_pred_svm = svm_model.predict(X_test_counts)
+
+    accuracy_svm = accuracy_score(y_test, y_pred_svm)
+    conf_matrix_svm = confusion_matrix(y_test, y_pred_svm)
+    classification_rep_svm = classification_report(y_test, y_pred_svm)
+
+    print("Support Vector Machine (SVM):")
+    print(f"Accuracy: {accuracy_svm}")
+    print("\nConfusion Matrix:")
+    print(conf_matrix_svm)
+    print("\nClassification Report:")
+    print(classification_rep_svm)
+
+    # final CPU and memory usage
+    final_cpu_usage = psutil.cpu_percent()
+    final_memory_usage = psutil.virtual_memory().used
+
+    # calculate resource utilization
+    cpu_utilization = final_cpu_usage - initial_cpu_usage
+    memory_utilization = final_memory_usage - initial_memory_usage
+
+    return cpu_utilization, memory_utilization
+
+cpu_utilization, memory_utilization = monitor_resource_utilization()
+print("CPU Utilization:", cpu_utilization, "%")
+print("Memory Utilization:", memory_utilization, "bytes")
+
+# Output / Results
+/*
+Support Vector Machine (SVM):
+Accuracy: 0.9664609605580896
+
+Confusion Matrix:
+[[1483   35]
+ [  90 2119]]
+
+Classification Report:
+                precision    recall  f1-score   support
+
+Phishing Email       0.94      0.98      0.96      1518
+    Safe Email       0.98      0.96      0.97      2209
+
+      accuracy                           0.97      3727
+     macro avg       0.96      0.97      0.97      3727
+  weighted avg       0.97      0.97      0.97      3727
+
+CPU Utilization: 26.099999999999994 %
+Memory Utilization: 66195456 bytes
+*/
+
+
+
+# Number 3: Random Forrest
+from sklearn.ensemble import RandomForestClassifier
+
+def monitor_resource_utilization():
+    # record initial CPU and memory usage
+    initial_cpu_usage = psutil.cpu_percent()
+    initial_memory_usage = psutil.virtual_memory().used
+
+    X = df['email_text']
+    y = df['email_type']
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    vectorizer = CountVectorizer()
+    X_train_counts = vectorizer.fit_transform(X_train)
+    X_test_counts = vectorizer.transform(X_test)
+
+    rf_model = RandomForestClassifier(random_state=42)
+
+    rf_model.fit(X_train_counts, y_train)
+
+    y_pred_rf = rf_model.predict(X_test_counts)
+
+    accuracy_rf = accuracy_score(y_test, y_pred_rf)
+    conf_matrix_rf = confusion_matrix(y_test, y_pred_rf)
+    classification_rep_rf = classification_report(y_test, y_pred_rf)
+
+    print("Random Forest Model:")
+    print(f"Accuracy: {accuracy_rf}")
+    print("\nConfusion Matrix:")
+    print(conf_matrix_rf)
+    print("\nClassification Report:")
+    print(classification_rep_rf)
+
+    # Final CPU and memory usage
+    final_cpu_usage = psutil.cpu_percent()
+    final_memory_usage = psutil.virtual_memory().used
+
+    # Calculate resource utilization
+    cpu_utilization = final_cpu_usage - initial_cpu_usage
+    memory_utilization = final_memory_usage - initial_memory_usage
+
+    return cpu_utilization, memory_utilization
+
+cpu_utilization, memory_utilization = monitor_resource_utilization()
+print("CPU Utilization:", cpu_utilization, "%")
+print("Memory Utilization:", memory_utilization, "bytes")
+
+# Output / Results
+/*
+Random Forest Model:
+Accuracy: 0.9616313388784545
+
+Confusion Matrix:
+[[1444   74]
+ [  69 2140]]
+
+Classification Report:
+                precision    recall  f1-score   support
+
+Phishing Email       0.95      0.95      0.95      1518
+    Safe Email       0.97      0.97      0.97      2209
+
+      accuracy                           0.96      3727
+     macro avg       0.96      0.96      0.96      3727
+  weighted avg       0.96      0.96      0.96      3727
+
+CPU Utilization: 51.60000000000001 %
+Memory Utilization: 80240640 bytes
+*/
+
+# Number 4: MNB + SVM + RF + Voting Classifier (hard)
+from sklearn.ensemble import VotingClassifier
+
+def monitor_resource_utilization():
+    # Record initial CPU and memory usage
+    initial_cpu_usage = psutil.cpu_percent()
+    initial_memory_usage = psutil.virtual_memory().used
+
+    # convert text into numerical features [1, 1,..]
+    vectorizer = CountVectorizer()
+    X_train_counts = vectorizer.fit_transform(X_train)
+    X_test_counts = vectorizer.transform(X_test)
+
+    # create classifiers
+    mnb = MultinomialNB()
+    svm = SVC(probability=True)
+    rf = RandomForestClassifier()
+
+    # creating soft voting classifier
+    voting_clf = VotingClassifier(estimators=[('mnb', mnb), ('svm', svm), ('rf', rf)], voting='hard')
+
+    # train the voting classifier
+    voting_clf.fit(X_train_counts, y_train)
+
+    # evaluate
+    accuracy = voting_clf.score(X_test_counts, y_test)
+    print("Accuracy:", accuracy)
+
+    final_cpu_usage = psutil.cpu_percent()
+    final_memory_usage = psutil.virtual_memory().used
+
+    # Calculate resource utilization
+    cpu_utilization = final_cpu_usage - initial_cpu_usage
+    memory_utilization = final_memory_usage - initial_memory_usage
+
+    return cpu_utilization, memory_utilization
+
+cpu_utilization, memory_utilization = monitor_resource_utilization()
+print("CPU Utilization:", cpu_utilization, "%")
+print("Memory Utilization:", memory_utilization, "bytes")
+
+# Results / Output
+/*
+Accuracy: 0.9573823671203745
+CPU Utilization: 48.088888888888881%
+Memory Utilization: 180875366 bytes
+*/
+
+# Number 5: MNB + SVM + RF + Voting Classifier (soft)
+from sklearn.ensemble import VotingClassifier
+
+def monitor_resource_utilization():
+    # Record initial CPU and memory usage
+    initial_cpu_usage = psutil.cpu_percent()
+    initial_memory_usage = psutil.virtual_memory().used
+
+    # convert text into numerical features [1, 1,..]
+    vectorizer = CountVectorizer()
+    X_train_counts = vectorizer.fit_transform(X_train)
+    X_test_counts = vectorizer.transform(X_test)
+
+    # create classifiers
+    mnb = MultinomialNB()
+    svm = SVC(probability=True)
+    rf = RandomForestClassifier()
+
+    # creating soft voting classifier
+    voting_clf = VotingClassifier(estimators=[('mnb', mnb), ('svm', svm), ('rf', rf)], voting='soft')
+
+    # train the voting classifier
+    voting_clf.fit(X_train_counts, y_train)
+
+    # evaluate
+    accuracy = voting_clf.score(X_test_counts, y_test)
+    print("Accuracy:", accuracy)
+
+    final_cpu_usage = psutil.cpu_percent()
+    final_memory_usage = psutil.virtual_memory().used
+
+    # Calculate resource utilization
+    cpu_utilization = final_cpu_usage - initial_cpu_usage
+    memory_utilization = final_memory_usage - initial_memory_usage
+
+    return cpu_utilization, memory_utilization
+
+cpu_utilization, memory_utilization = monitor_resource_utilization()
+print("CPU Utilization:", cpu_utilization, "%")
+print("Memory Utilization:", memory_utilization, "bytes")
+
+# Results / Output
+/*
+Accuracy: 0.96690023812634101
+CPU Utilization: 46.20000000000001%
+Memory Utilization: 160082059 bytes
+*/
+
+# Number 6: K-Neighbors
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+
+def monitor_resource_utilization():
+    # Record initial CPU and memory usage
+    initial_cpu_usage = psutil.cpu_percent()
+    initial_memory_usage = psutil.virtual_memory().used
+
+    pipeline_knn = Pipeline([
+        ('vect', CountVectorizer()),
+        ('clf', KNeighborsClassifier(n_neighbors=4))
+    ])
+
+    pipeline_knn.fit(X_train, y_train)
+
+    accuracy_knn = pipeline_knn.score(X_test, y_test)
+    print("Accuracy of Pipeline with KNN Classifier:", accuracy_knn)
+
+    # Calculate resource utilization
+    cpu_utilization = final_cpu_usage - initial_cpu_usage
+    memory_utilization = final_memory_usage - initial_memory_usage
+
+    return cpu_utilization, memory_utilization
+
+cpu_utilization, memory_utilization = monitor_resource_utilization()
+print("CPU Utilization:", cpu_utilization, "%")
+print("Memory Utilization:", memory_utilization, "bytes")
+
+# Ouput / Results
+/*
+Accuracy of Pipeline with KNN Classifier: 0.8433056077273947
+CPU Utilization: 5.5 %
+Memory Utilization: -94945280 bytes
+*/
