@@ -2,7 +2,8 @@
 # This code is a compilation of every cell that was executed in the GC environment 
 # https://colab.research.google.com/drive/1GeGIVWYd_DP8AI47ksXyYmxcQqcygy_E
 # Dataset: https://www.kaggle.com/datasets/subhajournal/phishingemails
-# In paper when 'runtime' is mentioned: 
+# Code that insinuates a visual output is shared in final paper
+# In final paper when 'runtime' is mentioned: 
 # this was calculated by the GCE after running each cell with coresponding classifier/algorithm
 
 import pandas as pd
